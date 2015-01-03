@@ -29,8 +29,8 @@ specJoin :: Spec
 specJoin = do
     describe "join" $ do
         it "empty list" $
-            join "\t" [] `shouldBe` ""
+            join '\t' [] `shouldBe` ""
         it "single element" $
-            join "\t" ["hey"] `shouldBe` "hey"
+            join '\t' ["hey"] `shouldBe` "hey"
         it "many elements" $
-            join "\t" ["apple", "orange", "grape"] `shouldBe` "apple\torange\tgrape"
+            join '\t' ["apple", "orange", "grape"] `shouldBe` "apple\torange\tgrape"

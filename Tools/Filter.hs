@@ -16,7 +16,7 @@ data Option = Option
 
 data FileProp = FileProp
     { positions :: Int
-    , delimiter :: ByteString
+    , delimiter :: Char
     , path      :: FilePath
     } deriving (Show)
 
@@ -29,10 +29,19 @@ positionsP lavel = option auto
     <> showDefault
     )
 
-filePropP :: String -> Parser FileProp
-filePropP lavel = fp <$> positionsP lavel
+delimiterP :: String -> Parser Char
+delimiterP lavel = option auto
+    (  long lavel
+    <> metavar "DELIMITER"
+    <> help "Field delimiter character."
+    <> value '\t'
+    <> showDefault
+    )
+
+filePropP :: String -> String -> Parser FileProp
+filePropP lavel delimLavel = fp <$> positionsP lavel <*> delimiterP delimLavel
   where
-    fp pos = FileProp pos "\t" ""
+    fp pos delim = FileProp pos delim ""
 
 fileP :: String -> Parser FilePath
 fileP label = strArgument
@@ -41,7 +50,10 @@ fileP label = strArgument
     )
 
 optionP :: Parser Option
-optionP = (<*>) helper $ opts <$> filePropP "inpos" <*> filePropP "patpos" <*> fileP "filepath" <*> fileP "filepath2"
+optionP = (<*>) helper $ opts <$> filePropP "pos1" "delim1"
+                              <*> filePropP "pos2" "delim2"
+                              <*> fileP "filepath1"
+                              <*> fileP "filepath2"
   where
     opts fp1 fp2 f1 f2 = Option fp1' fp2'
       where
@@ -49,10 +61,10 @@ optionP = (<*>) helper $ opts <$> filePropP "inpos" <*> filePropP "patpos" <*> f
         fp2' = fp2 { path = f2 }
 
 filterNotMatching :: Option -> IO [String]
-filterNotMatching (Option (FileProp _ _ f1) (FileProp _ _ f2)) = do
-    ls   <- map (B.split '\t') <$> readLines f1
+filterNotMatching (Option (FileProp _ delim1 f1) (FileProp _ _ f2)) = do
+    ls   <- map (B.split delim1) <$> readLines f1
     keys <- fromList <$> readLines f2
-    return . map (B.unpack . join "\t") $ runFilter ls keys
+    return . map (B.unpack . join delim1) $ runFilter ls keys
 
 readLines :: FilePath -> IO [ByteString]
 readLines path = B.lines <$> B.readFile path
@@ -64,9 +76,10 @@ isNotMatching :: Set ByteString -> [ByteString] -> Bool
 isNotMatching keys (key:_) = notMember key keys
 isNotMatching _    _       = False
 
-join :: ByteString -> [ByteString] -> ByteString
+join :: Char -> [ByteString] -> ByteString
 join glue = go
   where
+    glue' = B.singleton glue
     go []     = ""
     go [x]    = x
-    go (x:xs) = B.append (B.append x glue) $ go xs
+    go (x:xs) = B.append (B.append x glue') $ go xs
