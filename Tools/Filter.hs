@@ -61,20 +61,23 @@ optionP = (<*>) helper $ opts <$> filePropP "pos1" "delim1"
         fp2' = fp2 { path = f2 }
 
 filterNotMatching :: Option -> IO [String]
-filterNotMatching (Option (FileProp _ delim1 f1) (FileProp _ _ f2)) = do
-    ls   <- map (B.split delim1) <$> readLines f1
-    keys <- fromList <$> readLines f2
-    return . map (B.unpack . join delim1) $ runFilter ls keys
+filterNotMatching (Option (FileProp pos1 delim1 f1) (FileProp pos2 delim2 f2)) = do
+    ls   <- map (B.split delim1)      <$> readLines f1
+    pats <- buildPatterns pos2 delim2 <$> readLines f2
+    return . map (B.unpack . join delim1) $ runFilter pos1 ls pats
 
 readLines :: FilePath -> IO [ByteString]
 readLines path = B.lines <$> B.readFile path
 
-runFilter :: [[ByteString]] -> Set ByteString -> [[ByteString]]
-runFilter lines keys = filter (isNotMatching keys) lines
+buildPatterns :: Int -> Char -> [ByteString] -> Set ByteString
+buildPatterns pos delim rows = fromList $ map (\x -> x !! pos) rows'
+  where
+    rows' = map (B.split delim) rows
 
-isNotMatching :: Set ByteString -> [ByteString] -> Bool
-isNotMatching keys (key:_) = notMember key keys
-isNotMatching _    _       = False
+runFilter :: Int -> [[ByteString]] -> Set ByteString -> [[ByteString]]
+runFilter pos lines keys = filter (isNotMatching keys) lines
+  where
+    isNotMatching keys items = notMember (items !! pos) keys
 
 join :: Char -> [ByteString] -> ByteString
 join glue = go

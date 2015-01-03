@@ -14,16 +14,16 @@ specRunFilter :: Spec
 specRunFilter = do
     describe "runFilter" $ do
         it "empty keys" $
-            runFilter [["a"], ["b"], ["c"]] empty `shouldBe` [["a"], ["b"], ["c"]]
+            runFilter 0 [["a"], ["b"], ["c"]] empty `shouldBe` [["a"], ["b"], ["c"]]
         it "no drop" $
             let keys = fromList ["x", "y", "z"] in
-            runFilter [["a"], ["b"], ["c"]] keys `shouldBe` [["a"], ["b"], ["c"]]
+            runFilter 0 [["a"], ["b"], ["c"]] keys `shouldBe` [["a"], ["b"], ["c"]]
         it "drop one" $
             let keys = fromList ["a"] in
-            runFilter [["a"], ["b"], ["c"]] keys `shouldBe` [["b"], ["c"]]
+            runFilter 0 [["a"], ["b"], ["c"]] keys `shouldBe` [["b"], ["c"]]
         it "drop all" $
             let keys = fromList ["a", "b", "c"] in
-            runFilter [["a"], ["b"], ["c"]] keys `shouldBe` []
+            runFilter 0 [["a"], ["b"], ["c"]] keys `shouldBe` []
 
 specJoin :: Spec
 specJoin = do
