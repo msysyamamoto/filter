@@ -1,7 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Tools.Filter where
 
-import           Control.Applicative ((<$>))
 import           Data.Set            (Set, fromList, notMember)
 import           Data.ByteString     (ByteString)
 import qualified Data.ByteString.Char8 as B
@@ -64,20 +63,20 @@ filterNotMatching :: Option -> IO [String]
 filterNotMatching (Option (FileProp pos1 delim1 f1) (FileProp pos2 delim2 f2)) = do
     ls   <- map (B.split delim1)      <$> readLines f1
     pats <- buildPatterns pos2 delim2 <$> readLines f2
-    return . map (B.unpack . join delim1) $ runFilter pos1 ls pats
+    return . map (B.unpack . join delim1) $ runFilter pos1 pats ls
 
 readLines :: FilePath -> IO [ByteString]
-readLines path = B.lines <$> B.readFile path
+readLines filePath = B.lines <$> B.readFile filePath
 
 buildPatterns :: Int -> Char -> [ByteString] -> Set ByteString
 buildPatterns pos delim rows = fromList $ map (\x -> x !! pos) rows'
   where
     rows' = map (B.split delim) rows
 
-runFilter :: Int -> [[ByteString]] -> Set ByteString -> [[ByteString]]
-runFilter pos lines keys = filter (isNotMatching keys) lines
+runFilter :: Int -> Set ByteString -> [[ByteString]] -> [[ByteString]]
+runFilter pos keys = filter isNotMatching
   where
-    isNotMatching keys items = notMember (items !! pos) keys
+    isNotMatching items = notMember (items !! pos) keys
 
 join :: Char -> [ByteString] -> ByteString
 join glue = go

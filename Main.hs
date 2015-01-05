@@ -1,7 +1,5 @@
 import Data.Monoid
-import           Options.Applicative
-import System.Environment (getArgs, getProgName)
-import Control.Applicative ((<$>))
+import Options.Applicative
 import Tools.Filter
 
 main :: IO ()
