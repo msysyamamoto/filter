@@ -3,6 +3,13 @@ filter
 
 Filter tool.
 
+Build
+-----
+
+```
+cabal build
+```
+
 Usage
 -----
 
